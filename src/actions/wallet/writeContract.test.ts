@@ -2,6 +2,8 @@ import { describe, expect, test, vi } from 'vitest'
 
 import {
   BatchCallInvoker,
+  ERC20Approve1,
+  ERC20Approve2,
   ErrorsExample,
   Payable,
 } from '~contracts/generated.js'
@@ -14,6 +16,7 @@ import { optimism } from '../../chains/index.js'
 import { createWalletClient } from '../../clients/createWalletClient.js'
 import { walletActions } from '../../clients/decorators/wallet.js'
 import { http } from '../../clients/transports/http.js'
+import { erc20Abi } from '../../constants/abis.js'
 import { signAuthorization } from '../../experimental/index.js'
 import { decodeEventLog, parseEther } from '../../utils/index.js'
 import { getBalance } from '../public/getBalance.js'
@@ -632,4 +635,38 @@ describe('behavior: contract revert', () => {
       Version: viem@x.y.z]
     `)
   })
+})
+
+test.only('https://github.com/wevm/viem/issues/2703', async () => {
+  {
+    const { contractAddress } = await deploy(client, {
+      abi: ERC20Approve1.abi,
+      bytecode: ERC20Approve1.bytecode.object,
+    })
+
+    const hash = await writeContract(clientWithAccount, {
+      abi: erc20Abi,
+      address: contractAddress!,
+      functionName: 'approve',
+      args: [accounts[0].address, parseEther('1')],
+    })
+
+    expect(hash).toBeDefined()
+  }
+
+  {
+    const { contractAddress } = await deploy(client, {
+      abi: ERC20Approve2.abi,
+      bytecode: ERC20Approve2.bytecode.object,
+    })
+
+    const hash = await writeContract(clientWithAccount, {
+      abi: erc20Abi,
+      address: contractAddress!,
+      functionName: 'approve',
+      args: [accounts[0].address, parseEther('1')],
+    })
+
+    expect(hash).toBeDefined()
+  }
 })
